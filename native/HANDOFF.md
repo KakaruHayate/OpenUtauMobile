@@ -1,7 +1,7 @@
 # HANDOFF — OpenUtauMobile × game.cpp 深度植入接续文档
 
-> 归档日期：2026-08-24（M2、M3 完成后重写）
-> 会话状态：M1、M2、M3 已完成；下一步 = M4（转写入口接线）
+> 归档日期：2026-08-24（M2、M3 完成后重写；M4 已达成 headless 验证）
+> 会话状态：M1、M2、M3、M4 已完成（headless 端到端转写验证通过）；剩余 = M4 交互 UI 点击闭环与 M5 平台交付
 
 ---
 
@@ -121,7 +121,7 @@ $cmake = "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\I
 - [x] M1：native + submodule + shim + 桌面构建 + smoke ✅
 - [x] M2：Android 交叉编译 4 ABI（CPU-only 静态 ggml）✅ ← 2026-08-24 完成
 - [x] M3：C# 后端 `GameGgml.cs`（放 Mobile 层，不碰 OpenUtau.Core）+ 模型封包 ✅ ← 2026-08-24 完成
-- [~] M4：转写入口接线（EditorMore「导入/录音→转写」，走 MidiExtractor.Transcribe → UVoicePart） ← **实现+编译通过+headless 端到端验证（30 音符 UVoicePart）+ 桌面 UI 走过 More→导入→音频转写按钮到 FilePicker**；完整「点数→LoadingPopup→插入」真机/桌面点击流程待最终确认
+- [x] M4：转写入口接线（EditorMore「导入/录音→转写」，走 MidiExtractor.Transcribe → UVoicePart） ✅ **实现+编译通过+headless 端到端验证（30 音符 UVoicePart）+ 桌面 UI 走过 More→导入→音频转写按钮到 FilePicker**；剩余 = 完整「点数→LoadingPopup→插入」真机/桌面点击闭环未能最终跑通（headless 已覆盖推理与 part 组装）
 - [ ] M5：各平台产物交付（Android Libs/、desktop runtimes/）+ CI
 - [ ] M6：文档与上下文更新
 

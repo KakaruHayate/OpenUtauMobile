@@ -66,6 +66,7 @@ bool load_wav_pcm16(const char * path, std::vector<float> & out, int & sr) {
     std::fclose(f);
     if (!found_fmt || !found_data) { std::fprintf(stderr, "missing fmt/data\n"); return false; }
     if (format != 1) { std::fprintf(stderr, "not PCM\n"); return false; }
+    if (bits != 16) { std::fprintf(stderr, "not PCM16\n"); return false; }
     if (channels != 1) { std::fprintf(stderr, "not mono\n"); return false; }
     if (sampleRate != 44100) { std::fprintf(stderr, "not 44100Hz (got %d)\n", sampleRate); return false; }
     sr = sampleRate;

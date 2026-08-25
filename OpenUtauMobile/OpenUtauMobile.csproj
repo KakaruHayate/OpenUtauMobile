@@ -31,6 +31,7 @@
         <!-- 本地 vendor .oudep 存在才使用（CI runner 无该路径则留空 → 走下载） -->
         <GameOudepLocalPath Condition="'$(GameOudepLocalPath)' == '' and Exists('J:\GGML-GAME\vendor\game-cpp-release\game_ggml-windows-x64-vulkan-q8.oudep')">J:\GGML-GAME\vendor\game-cpp-release\game_ggml-windows-x64-vulkan-q8.oudep</GameOudepLocalPath>
         <GameOudepUrl Condition="'$(GameOudepUrl)' == ''">https://github.com/KakaruHayate/game.cpp/releases/download/v0.1.3/game_ggml-windows-x64-vulkan-q8.oudep</GameOudepUrl>
+        <GameOudepSha256 Condition="'$(GameOudepSha256)' == ''">895A85B56AAEEB15CD541469ACFA1AEDB2D3DC58B1A6890A2F8B6FB629AD990D</GameOudepSha256>
         <GameModelLogicalName>OpenUtauMobile.Models.game_medium.gguf</GameModelLogicalName>
     </PropertyGroup>
 
@@ -53,13 +54,20 @@
         <Error Condition="!Exists('$(GameOudepCache)') and !Exists('$(GameModelFile)')"
                Text="无法获得 GAME 模型的 .oudep（本地未找到且下载失败）。请先手动放置 $(GameOudepLocalPath) 或设置 GameOudepUrl"/>
 
-        <!-- 3) 从 .oudep 解出 game_medium.gguf（见 tools/extract_game_model.ps1） -->
+        <!-- 3) 校验 .oudep 哈希（固定到 release 资产，防篡改；本地 vendor 与下载均校验） -->
+        <GetFileHash Condition="Exists('$(GameOudepCache)')" Files="$(GameOudepCache)" Algorithm="SHA256">
+            <Output TaskParameter="Hash" PropertyName="GameOudepActualHash"/>
+        </GetFileHash>
+        <Error Condition="Exists('$(GameOudepCache)') and '$(GameOudepActualHash)' != '' and '$(GameOudepActualHash)' != '$(GameOudepSha256)'"
+               Text="GAME 模型 .oudep SHA-256 校验失败：预期 $(GameOudepSha256)，实测 $(GameOudepActualHash)"/>
+
+        <!-- 4) 从 .oudep 解出 game_medium.gguf（跨平台：pwsh + 正斜杠路径修正） -->
         <Exec Condition="!Exists('$(GameModelFile)') and Exists('$(GameOudepCache)')"
-              Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\extract_game_model.ps1&quot; -Oudep &quot;$(GameOudepCache)&quot; -Target &quot;$(GameModelFile)&quot;"/>
+              Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)/Tools/extract_game_model.ps1&quot; -Oudep &quot;$(GameOudepCache)&quot; -Target &quot;$(GameModelFile)&quot;"/>
 
         <Error Condition="!Exists('$(GameModelFile)')" Text="解压 GAME 模型失败"/>
 
-        <!-- 4) 动态注册为嵌入式资源（只在 obj 下生成，不进 git） -->
+        <!-- 5) 动态注册为嵌入式资源（只在 obj 下生成，不进 git） -->
         <ItemGroup>
             <EmbeddedResource Include="$(GameModelFile)" LogicalName="$(GameModelLogicalName)"/>
         </ItemGroup>

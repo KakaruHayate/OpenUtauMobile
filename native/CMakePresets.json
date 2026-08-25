@@ -2,18 +2,16 @@
   "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 18
+    "minor": 25
   },
   "configurePresets": [
     {
       "name": "android-common",
       "hidden": true,
-      "description": "Android cross-compile base: NDK toolchain + ninja + CPU-only static ggml.",
+      "description": "Android cross-compile base: NDK toolchain + ninja + CPU-only static ggml. Portable preset — machine-specific paths live in the untracked CMakeUserPresets.json override.",
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_MAKE_PROGRAM": "C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe",
-        "CMAKE_TOOLCHAIN_FILE": "J:/GGML-GAME/android-sdk/ndk/android-ndk-r28c/build/cmake/android.toolchain.cmake",
         "ANDROID_PLATFORM": "24",
         "ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES": "OFF",
         "GGML_NATIVE": "OFF",
@@ -94,4 +92,3 @@
     }
   ]
 }
-

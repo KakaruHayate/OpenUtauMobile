@@ -52,6 +52,8 @@ game_capi_model * game_capi_open(const char * gguf_path,
 void game_capi_close(game_capi_model * m);
 
 // 返回该实例运行时实际选中的后端名（写 buf）。用于诊断/UI 展示。
+// 注意：public API 未暴露 Model 实际选中的后端，因此无法可靠获知时返回 "unknown"，
+// 而不是用 available_backends()[0] 猜测（GPU→CPU fallback 后可能与实际不符）。
 int game_capi_backend_decided(game_capi_model * m, char * buf, int cap);
 
 // ---- 推理（串行）----------------------------------------------------------

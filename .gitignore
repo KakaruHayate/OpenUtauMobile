@@ -463,3 +463,6 @@ native/**/CMakeFiles/
 native/**/cmake_install.cmake
 native/**/CTestTestfile.cmake
 native/**/Testing/
+
+# Machine-specific CMake user presets (keep local absolute paths out of the repo)
+native/CMakeUserPresets.json

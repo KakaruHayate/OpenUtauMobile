@@ -137,12 +137,10 @@ extern "C" int game_capi_backend_decided(game_capi_model * m, char * buf, int ca
     if (!m || !buf || cap <= 0) return 0;
     ModelContext * ctx = reinterpret_cast<ModelContext *>(m);
     if (!ctx->model) return copy_to_buf(buf, cap, "?");
-    // 不触碰 internals()/Unstable API：以编译期可用首选后端近似"实际选择"。
-    // init_best_backend 的顺序 = available_backends() 顺序, 首选在单 GPU 机型即运行期结果。
-    const char * const * names = game_ggml::available_backends();
-    const int count = game_ggml::available_backends_count();
-    if (count <= 0) return copy_to_buf(buf, cap, "none");
-    return copy_to_buf(buf, cap, names[0]);
+    // 实际选中后端在 Model::load 内部由 init_best_backend 决定（GPU→CPU fallback 后
+    // 可能并非 available_backends()[0]），且 public API 未暴露该值的访问器；
+    // 不触碰 internals()/Unstable API，因此无法可靠获知 -> 显式返回 unknown，避免误报。
+    return copy_to_buf(buf, cap, "unknown");
 }
 
 extern "C" int game_capi_language_id(game_capi_model * m, const char * lang_code) {

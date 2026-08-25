@@ -704,63 +704,71 @@ public class EditorViewModel : NavigateViewModelBase, ICmdSubscriber, IDisposabl
             return;
         }
 
-        UProject project = DocManager.Inst.Project;
-        UWavePart wavePart = new()
+        try
         {
-            FilePath = file,
-        };
-        wavePart.Load(project); // 填充 channels/sampleRate；Samples 在 Peaks Task 内生成
-        await wavePart.Peaks;    // 等待 Samples 就绪（基类 Transcribe 直接读 wavePart.Samples）
-        if (wavePart.Samples == null)
-        {
-            ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeFailed"));
-            return;
-        }
-
-        int trackNo = project.tracks.Count;
-        UVoicePart? voicePart = null;
-        using (GameGgmlMidiExtractor extractor = new())
-        {
-            GameOptions options = new()
+            UProject project = DocManager.Inst.Project;
+            UWavePart wavePart = new()
             {
-                SamplingSteps = 8, // 与 ONNX 版默认一致
+                FilePath = file,
             };
+            wavePart.Load(project); // 填充 channels/sampleRate；Samples 在 Peaks Task 内生成
+            await wavePart.Peaks;    // 等待 Samples 就绪（基类 Transcribe 直接读 wavePart.Samples）
+            if (wavePart.Samples == null)
+            {
+                ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeFailed"));
+                return;
+            }
 
-            await LoadingPopupService.RunAsync(
-                L.S("EditorMore.TranscribeProgress"),
-                0d,
-                async loading =>
+            int trackNo = project.tracks.Count;
+            UVoicePart? voicePart = null;
+            using (GameGgmlMidiExtractor extractor = new())
+            {
+                GameOptions options = new()
                 {
-                    voicePart = await Task.Run(() => extractor.Transcribe(
-                        project, wavePart, options, null, null,
-                        (done, total) =>
-                        {
-                            double progress = total > 0 ? done * 100d / total : 0d;
-                            Dispatcher.UIThread.Post(
-                                () => loading.UpdateProgress(progress, $"{done}s / {total}s"));
-                        }));
-                });
-        }
+                    SamplingSteps = 8, // 与 ONNX 版默认一致
+                };
 
-        if (voicePart == null)
+                await LoadingPopupService.RunAsync(
+                    L.S("EditorMore.TranscribeProgress"),
+                    0d,
+                    async loading =>
+                    {
+                        voicePart = await Task.Run(() => extractor.Transcribe(
+                            project, wavePart, options, null, null,
+                            (done, total) =>
+                            {
+                                double progress = total > 0 ? done * 100d / total : 0d;
+                                Dispatcher.UIThread.Post(
+                                    () => loading.UpdateProgress(progress, $"{done}s / {total}s"));
+                            }));
+                    });
+            }
+
+            if (voicePart == null)
+            {
+                ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeFailed"));
+                return;
+            }
+
+            UTrack track = new(project)
+            {
+                TrackNo = trackNo,
+                TrackName = Path.GetFileNameWithoutExtension(file),
+            };
+            voicePart.trackNo = trackNo;
+
+            DocManager.Inst.StartUndoGroup();
+            DocManager.Inst.ExecuteCmd(new AddTrackCommand(project, track));
+            DocManager.Inst.ExecuteCmd(new AddPartCommand(project, voicePart));
+            DocManager.Inst.EndUndoGroup();
+
+            ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeDone"));
+        }
+        catch (Exception ex)
         {
+            Log.Error(ex, "TranscribeAudio failed for file={File}", file);
             ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeFailed"));
-            return;
         }
-
-        UTrack track = new(project)
-        {
-            TrackNo = trackNo,
-            TrackName = Path.GetFileNameWithoutExtension(file),
-        };
-        voicePart.trackNo = trackNo;
-
-        DocManager.Inst.StartUndoGroup();
-        DocManager.Inst.ExecuteCmd(new AddTrackCommand(project, track));
-        DocManager.Inst.ExecuteCmd(new AddPartCommand(project, voicePart));
-        DocManager.Inst.EndUndoGroup();
-
-        ToastService.Enqueue(L.S("EditorMore.Toast.TranscribeDone"));
     }
 
     private static async Task ImportMidi()
