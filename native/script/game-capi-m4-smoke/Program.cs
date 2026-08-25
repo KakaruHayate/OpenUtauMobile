@@ -24,7 +24,7 @@ internal static class Program
 
         string wav = rawArgs.Length > 0 && System.IO.File.Exists(rawArgs[0])
             ? rawArgs[0]
-            : System.IO.Path.GetFullPath("pick\\voice10.wav");
+            : System.IO.Path.GetFullPath(System.IO.Path.Combine("pick", "voice10.wav"));
         if (!System.IO.File.Exists(wav))
         {
             Console.WriteLine($"音频不存在: {wav}");
